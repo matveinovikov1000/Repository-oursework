@@ -1,8 +1,10 @@
-import json
 import datetime
-import pandas as pd
-from src.decorators import decorator
+import json
 import logging
+
+import pandas as pd
+
+from src.decorators import decorator
 
 logger_rep = logging.getLogger(__name__)
 file_handler_rep = logging.StreamHandler()
@@ -14,7 +16,7 @@ logger_rep.setLevel(logging.DEBUG)
 
 def selection_user_date():
     """Функция для запроса даты у пользователя"""
-    user_date = input("Введите дату окончания периода выписки в формате ДД.ММ.ГГГГ:\n")
+    user_date = input("Введите дату выписки в формате ДД.ММ.ГГГГ:\n")
     logger_rep.info("Дата введена")
     return user_date
 
@@ -71,8 +73,12 @@ def spending_by_workday(transactions, date):
         spendings_weekends = round(spendings_weekends_sum / len(spendings_weekends_list) * (-1), 2)
 
         spendings_week = pd.DataFrame(
-            {"Средние траты в будние дни": [spendings_workdays], "Средние траты в выходные дни": [spendings_weekends]})
+            {"Средние траты в будние дни": [spendings_workdays], "Средние траты в выходные дни": [spendings_weekends]}
+        )
         return spendings_week
     except ZeroDivisionError:
-        logger_rep.warning("При счёте средних знанчений трат выполнено деление на 0, следовательно в выбранном периоде операции не найдены")
+        logger_rep.warning(
+            "При счёте средних знанчений трат выполнено деление на 0, "
+            "следовательно в выбранном периоде операции не найдены"
+        )
         return "В указанный период операции не найдены"

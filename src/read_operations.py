@@ -1,5 +1,6 @@
-import pandas as pd
 import json
+
+import pandas as pd
 
 
 def read_operations_dataframe(filename="data/operations.xls"):

@@ -1,10 +1,11 @@
 import datetime
-import pandas as pd
 import json
-import requests
-import os
-from dotenv import load_dotenv
 import logging
+import os
+
+import pandas as pd
+import requests
+from dotenv import load_dotenv
 
 logger_ut = logging.getLogger(__name__)
 file_handler_ut = logging.StreamHandler()
@@ -45,10 +46,9 @@ def greetings(time=current_date_time):
     return greetings_time_day_dict
 
 
-def spending_cards(transactions):
+def spending_cards(transactions, time_sp):
     """Функция, показывающая сумму расходов и кэшбек за период по каждой карте + ТОП-5 транзакций по сумме платежа"""
-    user_date = input("Введите дату выписки в формате ДД.ММ.ГГГГ\n")
-    user_date_obj = datetime.datetime.strptime(user_date, "%d.%m.%Y")
+    user_date_obj = datetime.datetime.strptime(time_sp, "%d.%m.%Y")
     data = transactions.to_json(orient="records", indent=4, force_ascii=False)
     data_py = json.loads(data)
     period_list = []
@@ -60,7 +60,11 @@ def spending_cards(transactions):
         try:
             logger_ut.info("Перебор транзакций для фильтрации по периоду")
             data_obj = datetime.datetime.strptime(transaction["Дата платежа"], "%d.%m.%Y")
-            if data_obj.day <= user_date_obj.day and data_obj.month == user_date_obj.month and data_obj.year == user_date_obj.year:
+            if (
+                data_obj.day <= user_date_obj.day
+                and data_obj.month == user_date_obj.month
+                and data_obj.year == user_date_obj.year
+            ):
                 period_list.append(transaction)
         except TypeError:
             logger_ut.warning("Ключ не найден")
@@ -83,7 +87,11 @@ def spending_cards(transactions):
 
         for sum_card in data_sum_cards_py:
             logger_ut.info("Запись результата в список")
-            sum_card_dict = {"last_digits": sum_card.get("Номер карты"), "total_spent": sum_card.get("Сумма платежа"), "cashback": sum_card.get("Кэшбэк")}
+            sum_card_dict = {
+                "last_digits": sum_card.get("Номер карты"),
+                "total_spent": sum_card.get("Сумма платежа"),
+                "cashback": sum_card.get("Кэшбэк"),
+            }
             sum_cards_list.append(sum_card_dict)
 
         logger_ut.info("Обработка таблицы для получения ТОП-5 трат по картам")
@@ -93,7 +101,12 @@ def spending_cards(transactions):
 
         for top in data_top_py:
             logger_ut.info("Запись результата в список")
-            top_five = {"date": top.get("Дата платежа"), "amount": top.get("Сумма платежа"), "category": top.get("Категория"), "description": top.get("Описание")}
+            top_five = {
+                "date": top.get("Дата платежа"),
+                "amount": top.get("Сумма платежа"),
+                "category": top.get("Категория"),
+                "description": top.get("Описание"),
+            }
             top_five_list.append(top_five)
 
         return {"cards": sum_cards_list, "top_transactions": top_five_list}
@@ -114,23 +127,24 @@ def exchange_rates():
     load_dotenv()
     api_key = os.getenv("API_KEY_CURRENCY")
 
-    url = f"https://api.apilayer.com/exchangerates_data/latest?symbols={user_currency[0]},{user_currency[1]}&base={"RUB"}"
+    url = (f"https://api.apilayer.com/exchangerates_data/"
+           f"latest?symbols={user_currency[0]},{user_currency[1]}&base={"RUB"}")
 
     payload = {}
-    headers = {
-        "apikey": api_key
-    }
+    headers = {"apikey": api_key}
 
     logger_ut.info("Обращение к API")
     response = requests.request("GET", url, headers=headers, data=payload)
 
-    result = response.text
-
-    result_py = json.loads(result)
+    result_py = response.json()
 
     logger_ut.info("Запись ответа от API в словарь")
-    data_rate = {"currency_rates": [{"currency": "USD", "rate": round(1/result_py["rates"]["USD"], 4)},
-                                   {"currency": "EUR", "rate": round(1/result_py["rates"]["EUR"], 4)}]}
+    data_rate = {
+        "currency_rates": [
+            {"currency": "USD", "rate": round(1 / result_py["rates"]["USD"], 4)},
+            {"currency": "EUR", "rate": round(1 / result_py["rates"]["EUR"], 4)},
+        ]
+    }
 
     return data_rate
 
@@ -157,7 +171,11 @@ def stock_price():
     data_amzn = r_amzn.json()
 
     logger_ut.info("Запись ответа от API в словарь")
-    data_stock = {"stock_prices": [{"stock": data_aapl["Global Quote"]["01. symbol"], "price": data_aapl["Global Quote"]["05. price"]},
-                                   {"stock": data_amzn["Global Quote"]["01. symbol"], "price": data_amzn["Global Quote"]["05. price"]}]}
+    data_stock = {
+        "stock_prices": [
+            {"stock": data_aapl["Global Quote"]["01. symbol"], "price": data_aapl["Global Quote"]["05. price"]},
+            {"stock": data_amzn["Global Quote"]["01. symbol"], "price": data_amzn["Global Quote"]["05. price"]},
+        ]
+    }
 
     return data_stock

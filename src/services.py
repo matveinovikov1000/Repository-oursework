@@ -1,7 +1,6 @@
 import json
-import re
 import logging
-from src.read_operations import read_operations_list
+import re
 
 logger_ser = logging.getLogger(__name__)
 file_handler_ser = logging.StreamHandler()
@@ -11,13 +10,13 @@ logger_ser.addHandler(file_handler_ser)
 logger_ser.setLevel(logging.DEBUG)
 
 
-def search_transfers_individuals(read_operations_list):
+def search_transfers_individuals(transactions):
     """Функция для поиска переводов физическим лицам"""
     logger_ser.info("Чтение файла с операциями")
-    data_py = read_operations_list(filename="data/operations.xls")
+
     data_transfers = []
 
-    for transaction in data_py:
+    for transaction in transactions:
         try:
             logger_ser.info("Выбор операций перевода по необходимому паттерну")
             match = re.search(r"\w+\s+\D\.", transaction["Описание"])
